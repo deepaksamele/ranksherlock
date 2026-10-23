@@ -30,7 +30,7 @@ Python 3.10+ with `requests`, `beautifulsoup4`, `lxml`. First run only:
 python -m pip install -r "${CLAUDE_PLUGIN_ROOT}/requirements.txt"
 ```
 
-Then (use `python3` where `python` is not on PATH):
+Then (use `python3` on macOS/Linux where `python` is not on PATH; on Windows, if `python` prints "Python was not found" because of the Microsoft Store alias, use `py` instead):
 
 ```
 python "${CLAUDE_PLUGIN_ROOT}/scripts/run_audit.py" <url> [flags]
