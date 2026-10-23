@@ -1,6 +1,5 @@
 {
   "name": "ranksherlock",
-  "displayName": "RankSherlock",
   "version": "1.0.0",
   "description": "Evidence-based SEO, AEO and GEO audit for any website: real crawler, deterministic two-axis scoring (Search SEO + AI Visibility), AI crawler probes, schema validation, Core Web Vitals, client-ready HTML/PDF reports.",
   "author": {

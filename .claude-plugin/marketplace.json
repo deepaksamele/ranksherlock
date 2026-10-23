@@ -1,6 +1,10 @@
 {
   "name": "ranksherlock",
   "description": "RankSherlock: evidence-based SEO, AEO and GEO website audits for Claude Code.",
+  "metadata": {
+    "description": "RankSherlock: evidence-based SEO, AEO and GEO website audits for Claude Code.",
+    "version": "1.0.0"
+  },
   "owner": {
     "name": "Deepak Samele",
     "url": "https://github.com/deepaksamele"
