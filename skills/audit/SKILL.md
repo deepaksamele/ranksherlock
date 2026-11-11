@@ -19,7 +19,7 @@ Default run = the WHOLE site: every sitemap URL plus every internally linked pag
 - `--workers 12 --rate 12`: faster on robust hosting; stay at the defaults for shared hosting or if the site returns 429/503 (the crawler backs off automatically either way).
 - `--resume`: continue a crawl stored in `crawl.db` in the same output folder (after a timeout or interruption).
 - `--pdf`: client PDF (needs Playwright Chromium; the engine says so if missing).
-- `--client "Business Name" --prepared-by "Your Name, Agency" --brand "Agency" --accent "#0f766e" --logo URL`: cover page branding.
+- `--client "Business Name" --prepared-by "Your Name, Agency" --brand "Agency" --accent "#hex" --logo PATH_OR_URL --contact "email | phone"`: branding. `--logo` takes a local svg/png/jpg (embedded into the report) or a URL; use the logo version made for dark backgrounds because the cover is navy. `--accent` is the brand colour. `--contact` adds a closing "next steps" page. If the user has given brand assets before (check memory), pass them without asking.
 - `--business-type "e-commerce"` or `--local`: override detection when the engine guesses wrong.
 - `--no-psi`: skip Core Web Vitals. `PSI_API_KEY` env var or `--psi-key` gives a private PageSpeed quota (without it the shared quota often returns 429 and CWV shows as not measured).
 - `--no-external`: skip the Wikidata entity lookup.

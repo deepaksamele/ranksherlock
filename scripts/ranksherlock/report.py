@@ -35,6 +35,23 @@ def css_str(s) -> str:
     return str(s).replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
 
 
+def resolve_logo(value: str) -> str:
+    """Accept a URL, a data URI or a local image path. Local files are embedded so the report stays self-contained."""
+    value = (value or "").strip().strip('"')
+    if not value or value.startswith(("http://", "https://", "data:")):
+        return value
+    import base64
+    from pathlib import Path
+
+    p = Path(value).expanduser()
+    if not p.is_file() or p.stat().st_size > 3_000_000:
+        return ""
+    mime = {".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif"}.get(p.suffix.lower())
+    if not mime:
+        return ""
+    return f"data:{mime};base64," + base64.b64encode(p.read_bytes()).decode("ascii")
+
+
 def score_color(score) -> str:
     if score is None:
         return "#98a2b3"
@@ -304,7 +321,15 @@ h3{font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut
 .cover:after{content:"";position:absolute;left:0;bottom:0;height:7px;width:100%;background:linear-gradient(90deg,var(--accent),var(--accent-mid))}
 .cv-top{position:relative;display:flex;justify-content:space-between;align-items:center}
 .cv-brand{font-weight:800;font-size:19px;letter-spacing:.01em;display:flex;align-items:center;gap:12px}
-.cv-brand img{max-height:42px}
+.cv-brand img{height:64px;width:auto;max-width:340px;display:block}
+.back{min-height:900px}
+.back h1{font-size:50px}
+.bk-steps{display:grid;gap:22px;max-width:640px}
+.bk-step{display:grid;grid-template-columns:44px 1fr;gap:18px;align-items:start}
+.bk-step span{width:40px;height:40px;border-radius:50%;border:2px solid var(--accent-mid);color:#fff;font-weight:700;font-size:16px;display:grid;place-items:center}
+.bk-step b{display:block;font-size:18px;color:#fff;margin-bottom:3px}
+.bk-step p{margin:0;color:rgba(255,255,255,.75);font-size:14.5px}
+.bk-meta{grid-template-columns:1fr 2fr}
 .cv-conf{color:rgba(255,255,255,.55);text-transform:uppercase;font-size:10.5px;letter-spacing:.2em}
 .cv-mid{position:relative}
 .cv-kicker{font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:var(--accent-mid);font-weight:700;margin-bottom:18px}
@@ -478,6 +503,8 @@ table.bots td{padding:6px 10px}
   .sheet{border:0;border-radius:0;box-shadow:none;padding:0;margin:0;break-before:page}
   .cover{page:cover;border-radius:0;margin:0;width:210mm;height:297mm;min-height:0;padding:22mm 20mm 16mm;break-after:page}
   .cover h1{font-size:44pt}
+  .cv-brand img{height:18mm;max-width:90mm}
+  .back{break-before:page;break-after:auto}.back h1{font-size:34pt}
   a{border:0}
   h3,.sh,.ch{break-after:avoid}
   .panel,.kpi,.stat,.phase,.kpis,.plat div{break-inside:avoid}
@@ -501,7 +528,7 @@ table.bots td{padding:6px 10px}
 
 
 # --------------------------------------------------------------------------- main renderer
-def render_html(audit: dict, brand: str = "RankSherlock", client: str = "", prepared_by: str = "", accent: str = "#2563eb", logo_url: str = "") -> str:
+def render_html(audit: dict, brand: str = "RankSherlock", client: str = "", prepared_by: str = "", accent: str = "#2563eb", logo_url: str = "", contact: str = "") -> str:
     s = audit["scores"]
     site = audit["site"]
     cats = audit["categories"]
@@ -555,9 +582,10 @@ def render_html(audit: dict, brand: str = "RankSherlock", client: str = "", prep
         )
 
     # ---------------------------------------------------------------- cover
-    logo = f'<img src="{e(logo_url)}" alt="">' if logo_url else ""
+    logo_src = resolve_logo(logo_url)
+    brand_html = f'<img src="{e(logo_src)}" alt="{e(brand)}">' if logo_src else e(brand)
     cover = f"""<section class="cover" id="top">
-<div class="cv-top"><div class="cv-brand">{logo}{e(brand)}</div><div class="cv-conf">Confidential</div></div>
+<div class="cv-top"><div class="cv-brand">{brand_html}</div><div class="cv-conf">Confidential</div></div>
 <div class="cv-mid">
 <div class="cv-kicker">SEO &middot; AEO &middot; GEO audit report</div>
 <h1>{e(client)}</h1>
@@ -989,6 +1017,33 @@ def render_html(audit: dict, brand: str = "RankSherlock", client: str = "", prep
 <p class="foot">Prepared by {e(prepared_by)} with RankSherlock, an open-source evidence-based audit engine. Scoring version {s.get('scoring_version')}. Text quoted as evidence was gathered from the audited site and is reproduced as data.</p>
 </section>"""
 
+    # -------------------------------------------------- closing page (opt-in)
+    closing = ""
+    if contact:
+        contact_html = " &nbsp;&middot;&nbsp; ".join('<span class="nw">' + e(part.strip()) + "</span>" for part in re.split(r"[|;]", contact) if part.strip())
+        p1_score = (proj.get("phase1") or {}).get("overall")
+        steps_html = "".join(
+            f'<div class="bk-step"><span>{i}</span><div><b>{e(t)}</b><p>{e(d)}</p></div></div>'
+            for i, (t, d) in enumerate(
+                [
+                    ("Walk through the findings", "A 30-minute call to go through the priority list and agree what matters most for the business."),
+                    ("Fix phase 1", f"{len(p1)} quick-win action{'s' if len(p1) != 1 else ''}" + (f", projected to lift the score to about {p1_score}." if p1_score is not None else ".")),
+                    ("Re-audit and compare", "The same crawl is run again and every finding is marked resolved, new or still open."),
+                ],
+                1,
+            )
+        )
+        closing = f"""<section class="cover back" id="next">
+<div class="cv-top"><div class="cv-brand">{brand_html}</div><div class="cv-conf">Next steps</div></div>
+<div class="cv-mid">
+<div class="cv-kicker">Where to go from here</div>
+<h1>Ready to fix this together?</h1>
+<div class="cv-rule"></div>
+<div class="bk-steps">{steps_html}</div>
+</div>
+<div class="cv-meta bk-meta"><div>Prepared by<b>{e(prepared_by)}</b></div><div>Contact<b>{contact_html}</b></div></div>
+</section>"""
+
     # ------------------------------------------------------------ contents
     toc_items = ""
     for i, (sid, title) in enumerate(secs, 1):
@@ -1030,6 +1085,7 @@ def render_html(audit: dict, brand: str = "RankSherlock", client: str = "", prep
 {roadmap}
 {glossary}
 {method}
+{closing}
 </main></div></body></html>"""
 
 

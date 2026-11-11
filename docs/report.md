@@ -26,7 +26,11 @@
 
 ## Branding
 
-`run_audit.py ... --client "Name" --prepared-by "Person, Agency" --brand "Agency" --accent "#hex" --logo URL`, or re-render an existing audit without crawling: `rerender.py OUT_DIR --pdf --client ... --brand ...`.
+`run_audit.py ... --client "Name" --prepared-by "Person, Agency" --brand "Agency" --accent "#hex" --logo PATH_OR_URL --contact "email | phone"`, or re-render an existing audit without crawling: `rerender.py OUT_DIR --pdf --client ... --brand ...`.
+
+- `--logo` accepts a local svg/png/jpg/webp (embedded as a data URI, so the report stays one file) or an image URL. The cover is navy, so use the logo version made for dark backgrounds. When a logo is given it replaces the brand name on the cover.
+- `--accent` sets the brand colour used for the cover rule, chapter numbers, links and charts.
+- `--contact` adds a closing full-page "Ready to fix this together?" page with three next steps and the contact line.
 
 ## Companion files
 

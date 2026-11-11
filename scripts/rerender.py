@@ -24,12 +24,13 @@ def main(argv=None) -> int:
     ap.add_argument("--client", default="")
     ap.add_argument("--prepared-by", default="")
     ap.add_argument("--accent", default="#2563eb")
-    ap.add_argument("--logo", default="")
+    ap.add_argument("--logo", default="", help="logo for the cover: image URL or local file (svg/png/jpg), embedded into the report")
+    ap.add_argument("--contact", default="", help="contact line; adds a closing 'next steps' page")
     args = ap.parse_args(argv)
     out = Path(args.out_dir)
     audit = json.loads((out / "audit.json").read_text(encoding="utf-8"))
     html_path = out / "report.html"
-    html_path.write_text(render_html(audit, brand=args.brand, client=args.client, prepared_by=args.prepared_by, accent=args.accent, logo_url=args.logo), encoding="utf-8")
+    html_path.write_text(render_html(audit, brand=args.brand, client=args.client, prepared_by=args.prepared_by, accent=args.accent, logo_url=args.logo, contact=args.contact), encoding="utf-8")
     note = None
     if args.pdf:
         note = write_pdf(str(html_path), str(out / "report.pdf"), brand=args.brand, client=args.client or audit["site"]["host"])

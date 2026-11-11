@@ -81,7 +81,7 @@ ranksherlock-reports/<host>/<date>/
 ## Run it without Claude
 
 ```bash
-python scripts/run_audit.py https://example.com --pdf --client "Example Ltd" --brand "My Agency"
+python scripts/run_audit.py https://example.com --pdf --client "Example Ltd" --brand "My Agency" --logo ./logo-dark.svg --accent "#F26522" --contact "hello@agency.com | +1 555 0100"
 python scripts/run_audit.py https://big-site.com --max-pages 50000 --workers 12 --rate 12 --max-minutes 240
 python scripts/run_audit.py https://big-site.com --resume --out ranksherlock-reports/big-site.com/2026-10-29
 python scripts/rerender.py ranksherlock-reports/example.com/2026-10-29 --pdf --accent "#1d4ed8"

@@ -59,7 +59,8 @@ def main(argv=None) -> int:
     ap.add_argument("--client", default="", help="client / business name for the cover (default: host)")
     ap.add_argument("--prepared-by", default="", help="name of the person or agency preparing the report")
     ap.add_argument("--accent", default="#2563eb", help="accent colour for the report")
-    ap.add_argument("--logo", default="", help="URL or data URI of a logo for the cover")
+    ap.add_argument("--logo", default="", help="logo for the cover: image URL or local file (svg/png/jpg), embedded into the report; use a version made for dark backgrounds")
+    ap.add_argument("--contact", default="", help="contact line (email, phone, site); adds a closing 'next steps' page")
     ap.add_argument("--workers", type=int, default=8, help="concurrent fetches (default 8)")
     ap.add_argument("--rate", type=float, default=6.0, help="max requests per second across all workers (default 6)")
     ap.add_argument("--max-minutes", type=float, default=120, help="crawl time budget in minutes (default 120)")
@@ -193,7 +194,7 @@ def main(argv=None) -> int:
     (out_dir / "summary.md").write_text(render_markdown_summary(audit), encoding="utf-8")
     write_csvs(audit, pages, out_dir)
     html_path = out_dir / "report.html"
-    html_path.write_text(render_html(audit, brand=args.brand, client=args.client, prepared_by=args.prepared_by, accent=args.accent, logo_url=args.logo), encoding="utf-8")
+    html_path.write_text(render_html(audit, brand=args.brand, client=args.client, prepared_by=args.prepared_by, accent=args.accent, logo_url=args.logo, contact=args.contact), encoding="utf-8")
     pdf_note = None
     if args.pdf:
         log("Rendering PDF")
