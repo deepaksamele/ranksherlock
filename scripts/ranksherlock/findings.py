@@ -133,7 +133,7 @@ class Collector:
             group = (CHECKS.get(id) or {}).get("group", "")
         except Exception:  # pragma: no cover
             pass
-        self.checks.append({"id": id, "title": title, "status": "pass", "note": note, "group": group})
+        self.checks.append({"id": id, "title": tidy_title(title), "status": "pass", "note": note, "group": group})
 
     def skipped(self, id: str, title: str, note: str = "") -> None:
         self.checks.append({"id": id, "title": title, "status": "skip", "note": note})

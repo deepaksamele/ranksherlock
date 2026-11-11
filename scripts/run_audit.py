@@ -58,7 +58,7 @@ def main(argv=None) -> int:
     ap.add_argument("--brand", default="RankSherlock", help="agency or tool name shown on the report")
     ap.add_argument("--client", default="", help="client / business name for the cover (default: host)")
     ap.add_argument("--prepared-by", default="", help="name of the person or agency preparing the report")
-    ap.add_argument("--accent", default="#0f766e", help="accent colour for the report")
+    ap.add_argument("--accent", default="#2563eb", help="accent colour for the report")
     ap.add_argument("--logo", default="", help="URL or data URI of a logo for the cover")
     ap.add_argument("--workers", type=int, default=8, help="concurrent fetches (default 8)")
     ap.add_argument("--rate", type=float, default=6.0, help="max requests per second across all workers (default 6)")
