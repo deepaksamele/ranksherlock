@@ -329,7 +329,8 @@ h3{font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut
 .bk-step span{width:40px;height:40px;border-radius:50%;border:2px solid var(--accent-mid);color:#fff;font-weight:700;font-size:16px;display:grid;place-items:center}
 .bk-step b{display:block;font-size:18px;color:#fff;margin-bottom:3px}
 .bk-step p{margin:0;color:rgba(255,255,255,.75);font-size:14.5px}
-.bk-meta{grid-template-columns:1fr 2fr}
+.bk-meta{grid-template-columns:auto 1fr;gap:56px}
+.bk-meta b{white-space:nowrap}
 .cv-conf{color:rgba(255,255,255,.55);text-transform:uppercase;font-size:10.5px;letter-spacing:.2em}
 .cv-mid{position:relative}
 .cv-kicker{font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:var(--accent-mid);font-weight:700;margin-bottom:18px}
