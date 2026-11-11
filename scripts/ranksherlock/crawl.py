@@ -244,6 +244,8 @@ class Crawler:
         if registrable_host(url) != self.host:
             return
         path = urlparse(url).path
+        if path.startswith(("/cdn-cgi/", "/wp-json/", "/xmlrpc.php")):
+            return  # CDN and CMS service endpoints (Cloudflare email protection etc.), not pages
         if DOC_EXT.search(path):
             if url not in self.documents and len(self.documents) < 2000:
                 self.documents.append(url)

@@ -13,6 +13,29 @@ SEVERITY_SOFT_CAP = {"critical": 30, "high": 24, "medium": 15, "low": 6, "info":
 MAX_PENALTY = 50
 
 
+_VERB_SING = {"have": "has", "are": "is", "do": "does", "carry": "carries", "canonicalise": "canonicalises", "miss": "misses"}
+
+
+def tidy_title(title: str) -> str:
+    """Fix '1 pages have' style grammar in generated finding titles."""
+    import re
+
+    def fix(m):
+        noun = m.group(2)
+        noun = noun[:-1] if noun.endswith("s") else noun
+        verb = m.group(4)
+        if verb:
+            verb = _VERB_SING.get(verb, verb if verb.endswith("s") else verb + "s")
+        return f"{m.group(1)}1 {noun}{m.group(3) or ''}{(' ' + verb) if verb else ''}"
+
+    return re.sub(
+        r"(^|\s)1 ((?:[a-z-]+ ){0,2}(?:pages|articles|titles|URLs|images|products|items|documents|links|templates|groups|descriptions|questions|listings))"
+        r"(\s\([^)]*\))?(?: (have|are|do|share|carry|lack|read|forbid|disable|use|miss|show|end|serve|open|cite|embed|canonicalise|declare|load|link|contain|sit|return|go|point|lead|look|reuse|loads|returned|timed))?\b",
+        fix,
+        title,
+    )
+
+
 def weighted_penalty(findings: list[dict]) -> int:
     """Sum severity weights with a soft cap per severity (so 40 low findings cannot zero a category)."""
     total = 0.0
@@ -92,6 +115,7 @@ class Collector:
             affected_count = len(pages) if pages else (len(evidence) if evidence else 1)
         if impact is None:
             impact = {"critical": "high", "high": "high", "medium": "medium", "low": "low", "info": "low"}[severity]
+        title = tidy_title(title)
         f = Finding(id, self.category, severity, title, why, fix, evidence, affected_count, effort, impact, pages, group=group, steps=list(steps or []), verify=verify, owner=owner, ref=ref)
         f = self._enrich(f)
         self.findings.append(f)

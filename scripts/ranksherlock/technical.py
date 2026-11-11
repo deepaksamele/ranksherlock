@@ -201,7 +201,7 @@ def analyze_technical(crawler: Crawler, fetcher: Fetcher, check_links: int = 80,
         for p in broken[:200]:
             s = crawler.inlinks.get(p.url, [])
             src[p.url] = s[0] if s else ""
-        c.add("broken-internal-urls", sev, f"{len(broken):,} internal links lead to broken pages", "Dead ends waste crawl budget and frustrate users; Google reads many 404s as a quality signal.", "Fix or 301 the broken URLs and update the linking pages.", evidence=[f"{p.url} -> {p.status or p.error}" + (f" (linked from {src.get(p.url)})" if src.get(p.url) else "") for p in broken[:8]], affected_count=len(broken), pages=[p.url for p in broken[:300]])
+        c.add("broken-internal-urls", sev, f"{len(broken):,} internal link{'s lead' if len(broken) != 1 else ' leads'} to broken pages", "Dead ends waste crawl budget and frustrate users; Google reads many 404s as a quality signal.", "Fix or 301 the broken URLs and update the linking pages.", evidence=[f"{p.url} -> {p.status or p.error}" + (f" (linked from {src.get(p.url)})" if src.get(p.url) else "") for p in broken[:8]], affected_count=len(broken), pages=[p.url for p in broken[:300]])
     else:
         c.passed("broken-internal-urls", "No broken internal URLs in the crawl")
     if server_err:
