@@ -1,26 +1,23 @@
 # RankSherlock
 
-**Evidence-based SEO, AEO and GEO audits for any website, inside Claude Code.**
+**Whole-site SEO, AEO and GEO audits with a real crawler, 250+ deterministic checks and a client-ready report. Built for Claude Code.**
 
-RankSherlock crawls a site for real, runs 108 deterministic checks, scores it on two axes (Search SEO and AI Visibility), probes how AI crawlers are actually treated, and hands Claude the evidence to write a client-ready report. No paid APIs. No invented numbers.
+RankSherlock crawls the entire site (sitemaps plus every internal link, up to 50,000 pages), runs every check with evidence, scores it on two axes (Search SEO and AI Visibility), probes how AI crawlers are actually treated, and renders a branded HTML/PDF report that explains every finding in plain English: what we checked, what we found, why it matters, how to fix it, how to verify it. No paid APIs. No invented numbers.
 
 ```
-/ranksherlock:audit https://example.com
+/ranksherlock:audit https://example.com --pdf --client "Example Ltd"
 ```
 
-## Why another SEO skill
+## What makes it different
 
-Most Claude Code SEO skills tell the model to "crawl 500 pages" and then fetch one URL at a time, or they let the model guess a score. RankSherlock is built the other way round:
-
-| | RankSherlock | Typical skill |
+| | RankSherlock 2.0 | Typical audit skill |
 |---|---|---|
-| Crawler | Real BFS crawler, sitemap-seeded, robots-aware, page cap you choose | WebFetch one page at a time |
-| Scoring | Deterministic penalties, fixed weights, published caps, "not measured" instead of guesses | Model-estimated |
-| AI crawler access | robots.txt per bot with correct roles (retrieval vs training) plus live user-agent probes to catch firewall blocks | robots.txt only, often with outdated bot facts |
-| Core Web Vitals | PageSpeed Insights field + lab data when reachable, otherwise explicitly unmeasured | Claimed from HTML inspection |
-| Findings | Every finding carries evidence URLs, affected count, effort and a fix lane (auto / assisted / human) | Prose |
-| Output | `audit.json` contract, Markdown summary, self-contained HTML report, optional PDF | Markdown |
-| Re-audit | `compare.py` diffs two runs by finding id (resolved / new / persisting) or contrasts two sites | Manual |
+| Crawler | Concurrent whole-site crawler: all sitemap files, BFS link depth, orphan detection, SQLite checkpoints, resume, polite back-off | Homepage plus a few pages, or WebFetch one URL at a time |
+| Checks | 250+ deterministic checks across technical, content and AEO, schema, AI visibility, local, e-commerce and performance, each with evidence URLs | Prose judgement |
+| Scoring | Severity-weighted with soft caps, two axes, business-type weighting, hard caps for blockers (shown as "capped from"), projected score after fixes, "not measured" never counted | Model-estimated number |
+| AI visibility | 35 AI bots with roles (retrieval / user-fetch / training), robots.txt 7-state parsing, Content-Signal, live user-agent probes on homepage and inner pages, Cloudflare detection, llms.txt validation, Wikidata entity lookup, platform-by-platform readiness, passage citability | robots.txt only |
+| Report | Cover, executive summary, every check (pass and fail), detail card per finding with steps and verification, AI bot tables, Core Web Vitals, key page scorecards, page inventory, 90-day roadmap with projected scores, glossary, methodology; PDF with page numbers; ticket-ready CSVs | Markdown |
+| Re-audit | `compare.py` diffs two runs by finding id (resolved / new / persisting) | Manual |
 
 ## Install
 
@@ -31,77 +28,89 @@ Inside Claude Code:
 /plugin install ranksherlock@ranksherlock
 ```
 
-Python 3.10+ is required. Dependencies install once:
+Python 3.10+ is required. Dependencies install once (the `audit` skill runs this for you):
 
 ```bash
 python -m pip install -r ~/.claude/plugins/marketplaces/ranksherlock/requirements.txt
 ```
 
-(or let the `audit` skill run that line for you the first time). For PDF reports also run `pip install playwright && playwright install chromium`.
-
-Manual install without the plugin system: clone the repo and copy `skills/*` into `~/.claude/skills/`, then replace `${CLAUDE_PLUGIN_ROOT}` in the SKILL.md files with the clone path.
+For PDF reports also run `pip install playwright && playwright install chromium`. On Windows, if `python` opens the Microsoft Store, use `py`.
 
 ## Skills
 
 | Command | What it does |
 |---|---|
-| `/ranksherlock:audit <url> [--max-pages N] [--quick] [--pdf] [--no-psi] [--brand NAME]` | Full site audit: crawl, 6 categories, two-axis score, HTML/PDF report, narrative |
-| `/ranksherlock:page <url>` | Deep review of one page with rewrite suggestions |
-| `/ranksherlock:geo <url>` | AI visibility only: crawler access, firewall probes, entity, citability, llms.txt, 30-day plan |
+| `/ranksherlock:audit <url> [--quick] [--max-pages N] [--pdf] [--client NAME] [--brand NAME]` | Whole-site audit, all categories, two-axis score, HTML/PDF report, narrative and page rewrites |
+| `/ranksherlock:page <url>` | Deep review of one page with rewritten title, description, H1 and opening paragraph |
+| `/ranksherlock:geo <url>` | AI visibility only: bot access, firewall probes, Content-Signal, llms.txt, entity and Wikidata, citability, platform readiness, 30-day plan |
 | `/ranksherlock:compare <a> <b> [--competitor]` | Before/after diff or side-by-side with a competitor |
 
-Three subagents (`technical-auditor`, `content-auditor`, `geo-auditor`) can be fanned out in parallel on large sites for deeper per-area write-ups.
+Three subagents (`technical-auditor`, `content-auditor`, `geo-auditor`) can be fanned out in parallel on large sites.
 
 ## What gets checked
 
-Six categories, 108 failing checks plus pass markers. Full list in [docs/checks.md](docs/checks.md).
+Seven categories; the full list with severities is in [docs/checks.md](docs/checks.md).
 
-- **Technical**: robots.txt, sitemaps (foreign hosts, http URLs, non-200 entries, noindex entries, lastmod), https and www redirects, redirect chains, broken internal and outbound links, soft 404s, 404 handling, noindex, canonicals (missing, multiple, to homepage, http), duplicate titles/descriptions/H1, URL hygiene, depth, security headers, compression, mixed content, viewport, lang, client-side rendering, hreflang validity, page weight, server response time.
-- **Structured data**: presence and coverage, JSON syntax, Organization/WebSite on the homepage, sameAs and logo, required and recommended properties per type, self-serving star ratings, breadcrumbs, Article and Product coverage, deprecated types, duplicate Organization blocks.
-- **Content, on-page and AEO**: titles and descriptions, H1 and heading outline, thin content, text ratio, readability, AI filler phrases, About/Contact/Privacy pages, author bylines, dates, outbound citations, image alt/format/dimensions, internal links and anchors, question headings, FAQ blocks, answer-first intros, lists and tables, passage citability (deterministic 0 to 100 per page).
-- **AI visibility (GEO)**: 20 AI bots with correct roles, 7-state robots.txt status, Cloudflare managed-robots detection, live probes as GPTBot / OAI-SearchBot / ClaudeBot / PerplexityBot / Googlebot, nosnippet, llms.txt and llms-full.txt format, entity name consistency, knowledge-graph sameAs, feeds, Markdown content negotiation.
-- **Local SEO** (only when the site looks local): LocalBusiness schema completeness and subtype, NAP consistency, visible address, map embed, location pages and doorway-page detection, reviews, Business Profile link.
-- **Performance**: PageSpeed Insights field (CrUX p75) and lab metrics for the homepage plus two inner pages, top opportunities, page weight, DOM size, script count, lazy loading, inline CSS bloat.
+- **Technical** (100+ checks): robots.txt syntax and traps, sitemaps (index errors, 50k limit, size, duplicates, foreign hosts, http URLs, lastmod truthfulness, non-200, redirected, noindex and non-canonical entries, coverage gaps, orphans), https and www redirects, chains, temporary redirects, loops, meta refresh, broken links with the linking page, server errors, timeouts, soft 404s, 404 handling and custom 404 quality, noindex and nofollow directives, utility pages indexable, pagination and parameter duplicates, canonicals (missing, multiple, to homepage, cross-domain, http, conflicting with noindex, broken targets), duplicate titles, descriptions, H1s and exact-duplicate bodies, trailing-slash and double-slash duplicates, URL hygiene, click depth, security headers, compression, cache headers, mixed content, viewport and zoom lock, html lang, AMP, client-side rendering, hreflang (codes, self, return tags, x-default, protocol, non-canonical), outbound links, HTML size, server response, accessibility basics (empty links, unlabelled inputs, favicon, skip link), analytics and legacy tags.
+- **Content, on-page and AEO** (70+): titles (missing, long, short, same as home, brand doubled, CMS defaults), descriptions, H1s, hierarchy, empty and UI-chrome headings, subheadings, page-type word floors, text ratio, placeholder text, template-duplicate copy, readability, filler phrases, table of contents, trust pages, contact and social links, author bylines, dates, stale content, outbound citations, media, YMYL reviewer lines, social proof, images (alt presence and quality, formats, dimensions, srcset, lazy hero, template images), internal links (count, density, generic anchors, mega menus, nofollow), question headings, FAQ, answer-first and definition openings, lists and tables, comparison tables, passage citability (deterministic 0 to 100), Open Graph and Twitter cards.
+- **Structured data** (35+): presence and coverage, Microdata-only, JSON syntax, Organization and WebSite on the homepage (sameAs, logo, contactPoint, richness, SearchAction), required and recommended properties for 20+ types including nested offers and ratings, self-serving and unverifiable ratings, placeholders, http context, relative URLs, invalid dates, FAQ text not visible, entity name and url consistency across blocks, breadcrumbs, Article and Product coverage (ProductGroup aware), offers completeness, shipping and returns, VideoObject, deprecated types, FAQPage note, business-type schema opportunities, duplicate Organization blocks.
+- **AI visibility** (25+): 35 bots with roles and 7-state robots.txt status, partial restrictions, Content-Signal, Cloudflare managed robots, live probes on homepage and inner pages (block, inconclusive, cloaked), nosnippet, noai, prompt-injection text, llms.txt and llms-full.txt validation with dead-link check, feeds, agents.md, RSL, markdown negotiation, entity name consistency, sameAs knowledge-graph anchors, About-page facts, Wikidata lookup, answer-sized paragraphs, citable facts, platform readiness.
+- **Local SEO** (when detected or forced): LocalBusiness schema completeness and subtype, areaServed, Business Profile in sameAs, schema vs visible phone, multiple phones, phone on homepage, visible address, hours, map, location pages (presence, doorway copy, thin, scale gates), reviews, Business Profile link.
+- **E-commerce** (for shops): thin and duplicated product copy, visible prices, product reviews and Q&A, duplicate listings, category copy, demo collections, shipping and returns pages, trust signals.
+- **Performance**: PageSpeed Insights field (CrUX p75) and lab metrics for the homepage plus one page per template, TTFB, TBT, inner-template scores, opportunities and diagnostics, render-blocking scripts, third-party hosts, lazy loading, inline CSS, DOM size, CDN, preload and fetchpriority hints, image weight sampled with HEAD requests.
 
 ## Scoring
 
-Deterministic and explained in [docs/scoring.md](docs/scoring.md). Short version: each finding deducts a severity penalty inside its category; categories combine with fixed weights into **Search SEO** and **AI Visibility**; overall health is 65/35. A few single defects cap an axis (robots blocking the site, homepage noindex, answer-engine bots blocked, content not in the HTML). Anything not measured is excluded, never guessed.
+Deterministic and explained in [docs/scoring.md](docs/scoring.md). Each finding deducts severity points inside its category (with soft caps so many small issues cannot zero a category); categories combine with business-type-aware weights into **Search SEO** and **AI Visibility**; overall health is 65/35. A few single defects cap an axis and the report says so. Unmeasured areas are excluded, never guessed. The roadmap shows projected scores after each phase.
 
 ## Output
 
 ```
 ranksherlock-reports/<host>/<date>/
-  crawl.json     every crawled page, parsed
-  audit.json     categories, findings with evidence, scores (the contract Claude reads)
-  summary.md     short Markdown summary
-  report.html    self-contained, print-ready client report
+  report.html    self-contained client report (see docs/report.md)
   report.pdf     with --pdf and Playwright Chromium
+  audit.json     categories, findings with evidence and explanations, scores (the contract Claude reads)
+  findings.csv   ticket-ready list of every finding
+  pages.csv      one row per crawled page
+  pages.jsonl    full parsed page records
+  crawl.json     crawl summary (+ first 200 pages)
+  crawl.db       SQLite: pages and sitemap URLs (enables --resume)
+  summary.md     short Markdown summary
 ```
 
 ## Run it without Claude
 
-The engine is plain Python:
-
 ```bash
-python scripts/run_audit.py https://example.com --max-pages 100 --pdf
+python scripts/run_audit.py https://example.com --pdf --client "Example Ltd" --brand "My Agency"
+python scripts/run_audit.py https://big-site.com --max-pages 50000 --workers 12 --rate 12 --max-minutes 240
+python scripts/run_audit.py https://big-site.com --resume --out ranksherlock-reports/big-site.com/2026-10-29
+python scripts/rerender.py ranksherlock-reports/example.com/2026-10-29 --pdf --accent "#1d4ed8"
 python scripts/compare.py before/audit.json after/audit.json
 ```
 
-Set `PSI_API_KEY` for a higher PageSpeed Insights quota (works without a key at low volume).
+Set `PSI_API_KEY` for a private PageSpeed Insights quota (the shared quota is exhausted quickly).
+
+## Large sites
+
+- Speed is about 5 to 10 pages per second depending on `--workers` / `--rate` and the host. 2,000 pages take 4 to 6 minutes; 50,000 pages take 1.5 to 3 hours.
+- Every parsed page is written to `crawl.db` as it arrives, so an interrupted crawl continues with `--resume`.
+- Memory stays bounded: full detail is kept for the first 500 pages (template analysis) and bulky per-page lists are trimmed for the rest; the full records stay in `crawl.db`.
+- The crawler backs off automatically on 429/503 and returns to full speed when the host recovers.
+- Word counts and readability are measured on the main content (navigation, header, footer and sidebars removed), while contact, address, hours and review signals are read from the full page.
 
 ## Honest limits
 
 - Rankings, traffic, backlinks and Search Console are not on the site, so they are out of scope.
 - AI Visibility measures readiness (access, entity clarity, quotability), not proof of citations. The `geo` skill can run a labelled web-search spot check.
-- JavaScript-only sites are reported as such (client-side rendering finding); the crawler does not execute JS, which is also what most AI crawlers see.
+- JavaScript-only sites are reported as such; the crawler does not execute JS, which is also what most AI crawlers see.
 - Field Core Web Vitals exist only for sites with enough Chrome traffic; the report says when they are missing.
 
 ## Safety
 
-The crawler identifies itself as `RankSherlock/1.0`, respects robots.txt, throttles requests, refuses private or loopback hosts unless `--allow-private`, and caps response sizes. Text scraped from audited sites is passed to Claude as data inside JSON, with a notice that it is never an instruction.
+The crawler identifies itself as `RankSherlock/2.0`, respects robots.txt, rate-limits and backs off on 429/503, refuses private or loopback hosts unless `--allow-private`, caps response sizes and persists to SQLite. Text scraped from audited sites is passed to Claude as data inside JSON, with a notice that it is never an instruction.
 
 ## Credits
 
-Built after reading the strongest open-source SEO skills for Claude Code and borrowing their best ideas: claude-seo (persistence contract, evidence envelope), geo-seo-claude (per-bot robots states, citability dimensions), claude-seo-ai (two-axis scoring, fix lanes), SEOmator (not-measured status, score caps), ultimate-seo-geo (finding identity across runs), Agentic-SEO-Skill (scripts as evidence collectors).
+Built after reading 45+ open-source SEO skills and auditors for Claude Code and borrowing their best ideas: claude-seo, geo-seo-claude, claude-seo-ai, SEOmator, ultimate-seo-geo, Agentic-SEO-Skill, Snippet tech-seo-audit, seranking seo-skills, lhitches claude-seo-skills, siteone-crawler, AndacGuven technical-seo-skill, do-audit, wonfull888 seo-audit and others.
 
 MIT License.

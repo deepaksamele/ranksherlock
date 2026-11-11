@@ -1,4 +1,4 @@
-# How RankSherlock scores a site
+# How RankSherlock scores a site (scoring version 2)
 
 The score is deterministic. Run the same site twice and you get the same number. Every point lost traces to a finding id with evidence.
 
@@ -7,40 +7,43 @@ The score is deterministic. Run the same site twice and you get the same number.
 Each analyzer runs checks against the crawl. A failed check produces a finding with:
 
 - `severity`: critical, high, medium, low, info
-- `evidence`: the URLs or values that triggered it
-- `affected_count`, `pages`
-- `effort` (low / medium / high) and `lane` (auto / assisted / human)
+- `evidence`, `affected_count`, `pages`
+- `effort` (low / medium / high), `lane` (auto / assisted / human), `owner`
+- client-facing text from the catalog: `what`, `why`, `business_impact`, `steps`, `verify`, `ref`
 
-Checks that cannot run (no PageSpeed data, not a local business) are recorded as skipped, never scored as failures.
+Checks that cannot run (no PageSpeed data, not a local business, not a shop) are recorded as skipped and listed under "What this audit did not check", never scored as failures.
 
 ## 2. Category score
 
-Each category starts at 100 and loses a weighted penalty per finding:
+Each category starts at 100 and loses points per finding:
 
-| Severity | Penalty |
-|---|---|
-| critical | 10 |
-| high | 6 |
-| medium | 3 |
-| low | 1 |
-| info | 0 |
+| Severity | Points | Soft cap |
+|---|---|---|
+| critical | 10 | 30 |
+| high | 6 | 24 |
+| medium | 3 | 15 |
+| low | 1 | 6 |
+| info | 0 | 0 |
 
-Category score = 100 minus (penalty / 40) x 100, floored at 0. So four high findings and two mediums (30 points) leave a category at 25.
+Beyond the soft cap for a severity, further findings of that severity count at half weight, so forty low findings cannot zero a category on their own. Category score = 100 minus (penalty / 50) x 100, floored at 0.
 
-Categories: technical, content (on-page, E-E-A-T, AEO, images, internal links), schema, performance, geo, local. `local` and `performance` are measured only when applicable or when PageSpeed Insights answered.
+Categories: technical, content (on-page, E-E-A-T, AEO, images, internal links), schema, geo, local (only when the site reads as local), ecommerce (only for shops), performance (only when PageSpeed Insights answered).
 
 ## 3. Two axes
 
-Search SEO and AI Visibility weigh the same categories differently. Unmeasured categories are dropped and the remaining weights re-normalised.
+Search SEO and AI Visibility weigh the categories differently. Unmeasured categories are dropped and the remaining weights re-normalised.
 
 | Category | Search SEO | AI Visibility |
 |---|---|---|
-| technical | 30 | 15 |
-| content | 25 | 30 |
-| schema | 12 | 20 |
-| performance | 18 | 0 |
+| technical | 28 | 15 |
+| content | 24 | 30 |
+| schema | 10 | 20 |
+| performance | 16 | 0 |
 | local | 10 | 0 |
+| ecommerce | 7 | 0 |
 | geo | 5 | 35 |
+
+Business-type multipliers on the search axis (before normalisation): local business (local x1.6, schema x1.2), e-commerce (ecommerce x1.6, schema x1.4, performance x1.2), publisher (content x1.4, geo x1.4), SaaS (content x1.2, geo x1.3), finance (content x1.3, schema x1.2), healthcare (content x1.3, local x1.3).
 
 Overall health = 65% Search SEO + 35% AI Visibility.
 
@@ -52,6 +55,7 @@ A few single defects make a high score misleading, so they cap an axis. The repo
 |---|---|---|
 | robots.txt blocks the whole site | 20 | both |
 | homepage noindex | 25 | both |
+| TLS certificate errors | 40 | both |
 | pages canonicalise to the homepage | 45 | search |
 | no HTTPS | 55 | search |
 | answer-engine crawlers blocked in robots.txt | 40 | ai |
@@ -64,10 +68,14 @@ A few single defects make a high score misleading, so they cap an axis. The repo
 
 A 90+, B 80 to 89, C 70 to 79, D 60 to 69, F below 60. An axis with no measured category is N/A, not F.
 
-## 6. What the score does not include
+## 6. Projections
+
+The roadmap recomputes the scores with the same model as if the findings in each phase were fixed: phase 1 (critical plus low-effort high/medium), phase 2 (plus the remaining high/medium that a developer can own), phase 3 (everything actionable). Projections are a guide to progress, not a traffic forecast.
+
+## 7. What the score does not include
 
 Rankings, traffic, backlinks, Search Console data and actual AI citations are not crawlable from the site, so they are out of scope. The `geo` skill can run a labelled spot check with web search. Treat the AI Visibility axis as readiness, not proof of citations.
 
-## 7. Changing the model
+## 8. Changing the model
 
-Weights live in `scripts/ranksherlock/score.py` (`SEARCH_WEIGHTS`, `AI_WEIGHTS`, `OVERALL_MIX`, cap rules) and penalties in `scripts/ranksherlock/findings.py`. Bump `scoring_version` in `score.py` when you change them; `compare.py` refuses to treat runs with different versions as comparable.
+Weights and caps live in `scripts/ranksherlock/score.py`; penalties and soft caps in `scripts/ranksherlock/findings.py`; client-facing text in `scripts/ranksherlock/catalog_*.py`. Bump `SCORING_VERSION` when you change weights; `compare.py` refuses to treat runs with different versions as comparable.

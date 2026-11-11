@@ -36,6 +36,9 @@ def main(argv=None) -> int:
         "ai_visibility": [sa["ai_visibility"]["score"], sb["ai_visibility"]["score"]],
         "categories": {k: [(sa["categories"].get(k, {}).get("score") if sa["categories"].get(k, {}).get("measured", True) else None), (sb["categories"].get(k, {}).get("score") if sb["categories"].get(k, {}).get("measured", True) else None)] for k in sorted(set(sa["categories"]) | set(sb["categories"]))},
         "scoring_version_match": sa.get("scoring_version") == sb.get("scoring_version"),
+        "pages_crawled": [a["crawl"]["pages_crawled"], b["crawl"]["pages_crawled"]],
+        "crawl_complete": [a["crawl"].get("complete"), b["crawl"].get("complete")],
+        "counts": [sa.get("counts"), sb.get("counts")],
     }
     if args.competitor:
         out["only_in_first"] = [{"id": k, "severity": v["severity"], "title": v["title"]} for k, v in fa.items() if k not in fb]

@@ -1,7 +1,7 @@
 {
   "name": "ranksherlock",
-  "version": "1.0.0",
-  "description": "Evidence-based SEO, AEO and GEO audit for any website: real crawler, deterministic two-axis scoring (Search SEO + AI Visibility), AI crawler probes, schema validation, Core Web Vitals, client-ready HTML/PDF reports.",
+  "version": "2.0.0",
+  "description": "Whole-site SEO, AEO and GEO audit (up to 50,000 pages): concurrent crawler, 250+ deterministic checks with evidence, two-axis scoring (Search SEO + AI Visibility), AI crawler probes, schema validation, Core Web Vitals, client-ready HTML/PDF report with explanations, roadmap and glossary.",
   "author": {
     "name": "Deepak Samele",
     "url": "https://github.com/deepaksamele"

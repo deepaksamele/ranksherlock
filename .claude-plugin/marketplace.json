@@ -2,8 +2,8 @@
   "name": "ranksherlock",
   "description": "RankSherlock: evidence-based SEO, AEO and GEO website audits for Claude Code.",
   "metadata": {
-    "description": "RankSherlock: evidence-based SEO, AEO and GEO website audits for Claude Code.",
-    "version": "1.0.0"
+    "description": "RankSherlock: whole-site SEO, AEO and GEO website audits with client-ready reports for Claude Code.",
+    "version": "2.0.0"
   },
   "owner": {
     "name": "Deepak Samele",
@@ -13,8 +13,8 @@
     {
       "name": "ranksherlock",
       "source": "./",
-      "description": "Audit any website for SEO, answer-engine (AEO) and AI-search (GEO) readiness with a real crawler, deterministic scoring and client-ready reports.",
-      "version": "1.0.0",
+      "description": "Audit any website for SEO, answer-engine (AEO) and AI-search (GEO) readiness: whole-site crawler, 250+ checks, deterministic scoring and client-ready HTML/PDF reports.",
+      "version": "2.0.0",
       "category": "marketing",
       "tags": ["seo", "audit", "geo", "aeo", "ai-search"]
     }

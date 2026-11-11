@@ -2,7 +2,7 @@
 name: compare
 description: Compare two RankSherlock audits: before vs after a fix round (what got resolved, what is new, what persists) or your site vs a competitor (where each wins). Use when the user says "compare", "re-audit and diff", "did the fixes work", "progress since last audit", or "how do we stack up against <competitor>".
 argument-hint: "<before-audit.json|url> <after-audit.json|url> [--competitor]"
-allowed-tools: Bash(python *), Bash(python3 *), Read, Glob
+allowed-tools: Bash(python *), Bash(python3 *), Bash(py *), Read, Glob
 ---
 
 # RankSherlock compare
@@ -10,8 +10,10 @@ allowed-tools: Bash(python *), Bash(python3 *), Read, Glob
 Inputs may be two existing `audit.json` paths or two URLs. For a URL, run the engine first with the same flags for both sides (same `--max-pages`, both with or without `--no-psi`) so the comparison is fair:
 
 ```
-python "${CLAUDE_PLUGIN_ROOT}/scripts/run_audit.py" <url> --max-pages 60
+python "${CLAUDE_PLUGIN_ROOT}/scripts/run_audit.py" <url> --max-pages 500
 ```
+
+(On Windows use `py` if `python` is the Microsoft Store alias. For a competitor contrast 300 to 500 pages per side is enough; for a before/after of the user's own site use the same cap as the first run.)
 
 Previous runs live under `./ranksherlock-reports/<host>/<date>/audit.json`; use Glob to find the latest two for one host when the user says "since last time".
 
